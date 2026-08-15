@@ -1,0 +1,42 @@
+name: Orion CI
+
+on:
+  push:
+    paths:
+      - "orion/**"
+      - ".github/workflows/orion-ci.yml"
+  pull_request:
+    paths:
+      - "orion/**"
+      - ".github/workflows/orion-ci.yml"
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: orion
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.ORION_E2E_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.ORION_E2E_SUPABASE_PUBLISHABLE_KEY }}
+      NEXT_PUBLIC_APP_NAME: Orion
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      E2E_USER_EMAIL: ${{ secrets.ORION_E2E_USER_EMAIL }}
+      E2E_USER_PASSWORD: ${{ secrets.ORION_E2E_USER_PASSWORD }}
+      E2E_ADMIN_EMAIL: ${{ secrets.ORION_E2E_ADMIN_EMAIL }}
+      E2E_ADMIN_PASSWORD: ${{ secrets.ORION_E2E_ADMIN_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: orion/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
