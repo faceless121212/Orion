@@ -1,6 +1,7 @@
 name: Orion CI
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - "orion/**"
