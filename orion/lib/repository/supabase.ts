@@ -128,9 +128,20 @@ export const supabaseRepository: Repository = {
       .update({ avatar_url: avatarUrl })
       .eq("id", id)
       .select("id");
+    const keep = avatarUrl ? avatarUrl.split("/").pop() : undefined;
 
-    if (error) return fail("error");
-    return data.length ? ok() : fail("not_found");
+    if (error || !data.length) {
+      // Don't leave an orphaned, publicly readable upload behind.
+      if (keep) await supabase.storage.from("avatars").remove([`${id}/${keep}`]);
+      return error ? fail("error") : fail("not_found");
+    }
+
+    // Remove earlier photos so replaced or removed avatars stop being public.
+    const { data: files } = await supabase.storage.from("avatars").list(id);
+    const stale = (files ?? []).filter((file) => file.name !== keep).map((file) => `${id}/${file.name}`);
+    if (stale.length) await supabase.storage.from("avatars").remove(stale);
+
+    return ok();
   },
 
   async listUsers() {

@@ -80,26 +80,59 @@ test("missions are limited to the user's own active agents and runtime fields ar
     });
     expect(usageError).not.toBeNull();
 
-    // Admins can read the mission; the user can delete their queued mission.
+    // Admins can read the mission; users never see other users' missions or usage.
     const { data: adminView } = await admin.supabase.from("missions").select("id").eq("id", mission!.id);
     expect(adminView).toHaveLength(1);
-    const { data: deleted } = await user.supabase.from("missions").delete().eq("id", mission!.id).select("id");
-    expect(deleted).toHaveLength(1);
+    const { data: othersMissions } = await user.supabase.from("missions").select("id").neq("user_id", user.userId);
+    expect(othersMissions).toEqual([]);
+    const { data: othersUsage } = await user.supabase.from("usage_events").select("id").neq("user_id", user.userId);
+    expect(othersUsage).toEqual([]);
+
+    // Archiving the agent blocks new missions for it.
+    await admin.supabase.from("agents").update({ status: "archived" }).eq("id", agent!.id);
+    const { error: archivedError } = await user.supabase.from("missions").insert(missionFor(user.userId, agent!.id));
+    expect(archivedError).not.toBeNull();
   } finally {
-    await admin.supabase.from("missions").delete().eq("agent_id", agent!.id);
+    // Only the owner can delete missions, and agents with missions cannot be deleted.
+    await user.supabase.from("missions").delete().eq("agent_id", agent!.id).eq("user_id", user.userId);
     await admin.supabase.from("agents").delete().eq("id", agent!.id);
   }
 });
 
 test("only admins can change integrations and agent knowledge", async () => {
+  const admin = await signedInClient("admin");
   const user = await signedInClient("user");
+  const { data: agent } = await admin.supabase
+    .from("agents")
+    .insert({ ...probeAgent, name: uniqueName("RLS knowledge agent") })
+    .select("id")
+    .single();
+
+  try {
+    await admin.supabase.from("user_agents").insert({ user_id: user.userId, agent_id: agent!.id, assigned_by: admin.userId });
+
+    // Even for an agent in their own squad, employees cannot attach files.
+    const { error: knowledgeError } = await user.supabase
+      .from("agent_knowledge")
+      .insert({ agent_id: agent!.id, file_id: "probe-file", name: "Probe", kind: "txt" });
+    expect(knowledgeError).not.toBeNull();
+
+    const { error: adminError } = await admin.supabase
+      .from("agent_knowledge")
+      .insert({ agent_id: agent!.id, file_id: "probe-file", name: "Probe", kind: "txt" });
+    expect(adminError).toBeNull();
+    const { data: visible } = await user.supabase.from("agent_knowledge").select("file_id").eq("agent_id", agent!.id);
+    expect(visible).toEqual([{ file_id: "probe-file" }]);
+  } finally {
+    await admin.supabase.from("agents").delete().eq("id", agent!.id);
+  }
 
   const { error: integrationError } = await user.supabase
     .from("integrations")
     .upsert({ provider: "google_drive", status: "connected", account_email: "attacker@example.com" });
   expect(integrationError).not.toBeNull();
 
-  const { data: integrations, error: readError } = await user.supabase.from("integrations").select("provider,status");
+  const { data: integrations, error: readError } = await user.supabase.from("integrations").select("provider,account_email");
   expect(readError).toBeNull();
-  expect(Array.isArray(integrations)).toBe(true);
+  expect(integrations?.some((row) => row.account_email === "attacker@example.com")).toBe(false);
 });

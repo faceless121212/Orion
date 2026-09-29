@@ -8,11 +8,45 @@
 
 alter table public.profiles
   add column job_title text not null default '' check (char_length(job_title) <= 80),
-  add column avatar_url text check (avatar_url is null or (avatar_url like 'https://%' and char_length(avatar_url) <= 500));
+  -- Only files in the user's own folder of the avatars bucket.
+  add column avatar_url text check (
+    avatar_url is null
+    or (
+      char_length(avatar_url) <= 500
+      and avatar_url like ('https://%/storage/v1/object/public/avatars/' || id::text || '/%')
+    )
+  );
 
 -- NOT VALID: enforce for new writes without failing on existing rows.
 alter table public.profiles
   add constraint profiles_full_name_length check (char_length(trim(full_name)) between 2 and 80) not valid;
+
+-- Keep sign-up working under the name constraint: clamp long names and
+-- replace too-short ones (e.g. a one-letter email local part).
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  display_name text := left(
+    coalesce(nullif(trim(new.raw_user_meta_data ->> 'full_name'), ''), split_part(new.email, '@', 1)),
+    80
+  );
+begin
+  if char_length(trim(display_name)) < 2 then
+    display_name := 'New member';
+  end if;
+
+  insert into public.profiles (id, email, full_name, role)
+  values (new.id, new.email, trim(display_name), 'user');
+
+  return new;
+end;
+$$;
+
+revoke all on function public.handle_new_user() from public;
 
 create trigger profiles_set_updated_at
 before update on public.profiles
@@ -27,7 +61,7 @@ with check (id = (select auth.uid()));
 
 -- Supabase's default grants include table-wide UPDATE; without this revoke the
 -- policy above would let a user rewrite their own role. Only these columns.
-revoke insert, update, delete, truncate, references, trigger on table public.profiles from authenticated;
+revoke insert, update, delete, truncate, references, trigger on table public.profiles from anon, authenticated;
 grant update (full_name, job_title, avatar_url) on table public.profiles to authenticated;
 
 -- Avatar storage: public read, owners write inside their own folder.
