@@ -8,6 +8,7 @@ export type NavigationItem = {
 
 const navigation: NavigationItem[] = [
   { label: "Missions", href: "/missions" },
+  { label: "My Squad", href: "/squad" },
   { label: "Usage", href: "/usage" },
   { label: "Agents", href: "/agents", adminOnly: true },
   { label: "Company", href: "/company", adminOnly: true },
