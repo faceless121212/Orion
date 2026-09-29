@@ -1,13 +1,14 @@
-import { Building2 } from "lucide-react";
-
-import { EmptyState } from "@/components/shell/empty-state";
+import { CompanyForm } from "@/components/company/company-form";
 import { PageHeader } from "@/components/shell/page-header";
+import { getCompanySettings } from "@/lib/data/company";
 
-export default function CompanyPage() {
+export default async function CompanyPage() {
+  const settings = await getCompanySettings();
+
   return (
     <>
       <PageHeader description="Centralize the company context and brand guidance every agent should understand." eyebrow="Administration" title="Company" />
-      <EmptyState description="Company facts, audience context, voice, and writing guidance will be configured here in Phase 2." icon={Building2} title="Add company context" />
+      <CompanyForm settings={settings} />
     </>
   );
 }

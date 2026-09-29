@@ -12,14 +12,17 @@ Orion is a secure, single-company dashboard for assigning AI agents to employees
 
 2. Copy `.env.example` to `.env.local` and add your Supabase project URL and keys.
 
-3. In the Supabase SQL editor, run:
+3. In the Supabase SQL editor, run in order:
 
    - `supabase/migrations/20260814000100_create_profiles.sql`
+   - `supabase/migrations/20260929000100_admin_configuration.sql`
    - `supabase/promote-first-user.sql` after replacing its example email
 
 4. Set `REGISTRATION_ALLOWED_EMAILS` to the comma-separated email addresses that may register. Registration fails closed when this value is missing.
 
-5. Start Orion and keep this terminal running:
+5. Optional: set `ANTHROPIC_API_KEY` to enable "Generate with AI" in the agent editor. Everything else works without it; the button explains what is missing.
+
+6. Start Orion and keep this terminal running:
 
    ```bash
    npm run dev

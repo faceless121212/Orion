@@ -35,6 +35,14 @@ Give administrators control over the company's agent workspace.
 
 **Exit criterion:** An admin can configure company context, create an agent, assign it to an employee, and the employee sees that agent in My Squad.
 
+**Implementation notes:**
+
+- Migration `20260929000100_admin_configuration.sql` adds `company_settings` (single row), `agents`, and `user_agents` with row-level security. Employees can read only active agents assigned to them and can update only `custom_instructions` on their own assignments (column-level grant).
+- Every server action re-checks the role (`requireAdmin`/`requireUser`) and validates input with zod; RLS is the second layer, not the only one.
+- My Squad is a `/squad` route for both roles, where employees also write personal instructions per agent.
+- Agents are archived rather than deleted from the UI, so Phase 3 missions can keep referencing them. `agents.managed_agent_id` is reserved for the Phase 3 Claude Managed Agents mirror.
+- Prompt generation runs server-side on `claude-opus-5` with server-side refusal fallbacks and needs `ANTHROPIC_API_KEY`. Usage tracking for these calls lands with `usage_events` in Phase 4.
+
 ## Phase 3 — Integrations and End-to-End Mission
 
 Prove the highest-risk workflow before expanding the product surface.

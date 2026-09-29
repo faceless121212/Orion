@@ -10,6 +10,7 @@ import {
   ClipboardList,
   LogOut,
   Settings,
+  Sparkles,
   Users,
 } from "lucide-react";
 
@@ -33,9 +34,11 @@ import {
 } from "@/components/ui/sidebar";
 import { getNavigation } from "@/lib/auth/access";
 import type { CurrentProfile } from "@/lib/auth/session";
+import { initials } from "@/lib/utils";
 
 const icons = {
   "/missions": ClipboardList,
+  "/squad": Sparkles,
   "/usage": BarChart3,
   "/agents": Bot,
   "/company": Building2,
@@ -43,15 +46,6 @@ const icons = {
   "/integrations": Cable,
   "/settings": Settings,
 } as const;
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
-}
 
 export function AppSidebar({ profile }: { profile: CurrentProfile }) {
   const pathname = usePathname();
