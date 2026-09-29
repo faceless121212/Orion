@@ -102,7 +102,7 @@ export function AgentForm({
               maxLength={80}
               name="name"
               onChange={(event) => setName(event.target.value)}
-              placeholder="Proposal Writer"
+              placeholder="Community Copywriter"
               required
               value={name}
             />
@@ -119,7 +119,7 @@ export function AgentForm({
               maxLength={500}
               name="description"
               onChange={(event) => setDescription(event.target.value)}
-              placeholder="Drafts client proposals from a short brief, using our pricing and case studies."
+              placeholder="Writes welcome posts, announcements, and member emails in our voice."
               value={description}
             />
           </FormField>
@@ -209,7 +209,7 @@ export function AgentForm({
               maxLength={20000}
               name="systemPrompt"
               onChange={(event) => setSystemPrompt(event.target.value)}
-              placeholder="You are the company's proposal writer…"
+              placeholder="You're our community copywriter…"
               required
               value={systemPrompt}
             />

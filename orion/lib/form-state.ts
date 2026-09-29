@@ -18,7 +18,7 @@ export function fieldsFrom(formData: FormData): Record<string, string> {
 
 export function failureMessage(
   failure: { reason: string; message?: string },
-  fallback = "Something went wrong. Try again.",
+  fallback = "Looks like something went wrong. Try again, and if it keeps happening, we're here to help.",
 ) {
   return failure.message ?? fallback;
 }

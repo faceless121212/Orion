@@ -68,7 +68,7 @@ export function MissionForm({
           id="mission-title"
           maxLength={120}
           name="title"
-          placeholder="Proposal for Lakeside Physio"
+          placeholder="Welcome post for new members"
           required
         />
       </FormField>
@@ -86,7 +86,7 @@ export function MissionForm({
           id="mission-brief"
           maxLength={8000}
           name="brief"
-          placeholder="Three-location physio group in Toronto, currently on paper intake…"
+          placeholder="A warm welcome post that explains where to start and invites people to introduce themselves…"
           required
         />
       </FormField>

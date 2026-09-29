@@ -339,7 +339,7 @@ export const demoRepository: Repository = {
   },
 
   async connectDrive() {
-    demoState().drive = { status: "connected", accountEmail: "workspace@northwind.demo", connectedAt: now() };
+    demoState().drive = { status: "connected", accountEmail: "workspace@orion.demo", connectedAt: now() };
     return ok();
   },
 

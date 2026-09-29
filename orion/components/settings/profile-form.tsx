@@ -36,7 +36,7 @@ export function ProfileForm({ fullName, jobTitle, email }: { fullName: string; j
             id="jobTitle"
             maxLength={80}
             name="jobTitle"
-            placeholder="Marketing Manager"
+            placeholder="Community Manager"
           />
         </FormField>
       </div>

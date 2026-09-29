@@ -23,19 +23,19 @@ const textFields: Array<{
     name: "overview",
     label: "Company overview",
     description: "What the company does, its products, and the facts every agent should know.",
-    placeholder: "Acme builds scheduling software for independent clinics…",
+    placeholder: "Orion helps creators, educators, and brands build thriving communities…",
   },
   {
     name: "audience",
     label: "Audience",
     description: "Who reads the documents agents produce.",
-    placeholder: "Clinic owners and office managers in North America…",
+    placeholder: "Community builders who want to bring their members together…",
   },
   {
     name: "brandVoice",
     label: "Brand voice",
     description: "Tone and personality to use in every output.",
-    placeholder: "Warm, plain-spoken, confident. Avoid jargon and hype…",
+    placeholder: "Friendly, encouraging, clear, and conversational. Never corporate or pushy…",
   },
   {
     name: "writingGuidelines",
