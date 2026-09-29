@@ -65,10 +65,10 @@ export function createSeed(now = Date.now()): DemoState {
   const random = prng(42);
 
   const profiles: Profile[] = [
-    { id: demoUserIds.admin, email: "alex@northwind.demo", fullName: "Alex Morgan", role: "admin", jobTitle: "Head of Operations", avatarUrl: null },
-    { id: demoUserIds.priya, email: "priya@northwind.demo", fullName: "Priya Shah", role: "user", jobTitle: "Marketing Manager", avatarUrl: null },
-    { id: demoUserIds.diego, email: "diego@northwind.demo", fullName: "Diego Alvarez", role: "user", jobTitle: "Sales Lead", avatarUrl: null },
-    { id: demoUserIds.mei, email: "mei@northwind.demo", fullName: "Mei Chen", role: "user", jobTitle: "Finance Analyst", avatarUrl: null },
+    { id: demoUserIds.admin, email: "alex@northwind.demo", fullName: "Alex Morgan", role: "admin", jobTitle: "Head of Operations", avatarUrl: "/brand/avatars/alex.webp" },
+    { id: demoUserIds.priya, email: "priya@northwind.demo", fullName: "Priya Shah", role: "user", jobTitle: "Marketing Manager", avatarUrl: "/brand/avatars/priya.webp" },
+    { id: demoUserIds.diego, email: "diego@northwind.demo", fullName: "Diego Alvarez", role: "user", jobTitle: "Sales Lead", avatarUrl: "/brand/avatars/diego.webp" },
+    { id: demoUserIds.mei, email: "mei@northwind.demo", fullName: "Mei Chen", role: "user", jobTitle: "Finance Analyst", avatarUrl: "/brand/avatars/mei.webp" },
   ];
 
   const company: CompanySettings = {

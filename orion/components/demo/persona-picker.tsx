@@ -1,9 +1,8 @@
 import { ArrowRight, ShieldCheck } from "lucide-react";
 
 import { demoSignInAction } from "@/app/(auth)/actions";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/shell/user-avatar";
 import type { Profile } from "@/lib/domain/types";
-import { initials } from "@/lib/utils";
 
 export function PersonaPicker({ personas }: { personas: Profile[] }) {
   return (
@@ -18,9 +17,7 @@ export function PersonaPicker({ personas }: { personas: Profile[] }) {
             className="group flex w-full items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-blue-300 hover:bg-blue-50/50 focus-visible:ring-4 focus-visible:ring-blue-100 focus-visible:outline-none"
             type="submit"
           >
-            <Avatar className="size-11">
-              <AvatarFallback className="bg-blue-100 font-semibold text-blue-700">{initials(persona.fullName)}</AvatarFallback>
-            </Avatar>
+            <UserAvatar avatarUrl={persona.avatarUrl} className="size-11" name={persona.fullName} />
             <span className="min-w-0 flex-1">
               <span className="flex items-center gap-2 font-semibold text-slate-950">
                 {persona.fullName}

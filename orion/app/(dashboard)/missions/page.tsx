@@ -75,7 +75,7 @@ export default async function MissionsPage({
         <EmptyState
           action={<Link className={buttonVariants({ variant: "outline" })} href="/squad">Open My Squad</Link>}
           description="Once an administrator assigns agents to your squad, you can turn a brief into a Google Doc, Sheet, or PDF."
-          icon={ClipboardList}
+          icon={ClipboardList} image="/brand/empty/missions.webp"
           title="No agents in your squad yet"
         />
       )}

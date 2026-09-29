@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 
 import { logoutAction } from "@/app/(auth)/actions";
-import { agentIconComponents } from "@/components/agents/agent-icon";
+import { AgentIcon } from "@/components/agents/agent-icon";
+import { LogoMark } from "@/components/brand/logo";
 import { UserAvatar } from "@/components/shell/user-avatar";
 import {
   Sidebar,
@@ -34,7 +35,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getNavigation } from "@/lib/auth/access";
 import type { CurrentProfile } from "@/lib/auth/session";
-import type { AgentIcon } from "@/lib/agents/catalog";
+import type { AgentIcon as AgentIconName } from "@/lib/agents/catalog";
 
 const icons = {
   "/missions": ClipboardList,
@@ -47,7 +48,7 @@ const icons = {
   "/settings": Settings,
 } as const;
 
-export type SidebarSquadItem = { agentId: string; name: string; icon: AgentIcon };
+export type SidebarSquadItem = { agentId: string; name: string; icon: AgentIconName };
 
 export function AppSidebar({ profile, squad }: { profile: CurrentProfile; squad: SidebarSquadItem[] }) {
   const pathname = usePathname();
@@ -64,9 +65,7 @@ export function AppSidebar({ profile, squad }: { profile: CurrentProfile; squad:
               render={<Link href="/missions" />}
               size="lg"
             >
-              <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-blue-600 text-sm font-black text-white shadow-sm">
-                O
-              </span>
+              <LogoMark priority />
               <span className="text-base font-bold tracking-tight">Orion</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -106,15 +105,13 @@ export function AppSidebar({ profile, squad }: { profile: CurrentProfile; squad:
             <SidebarMenu>
               {squad.length ? (
                 squad.map((member) => {
-                  const Icon = agentIconComponents[member.icon] ?? Bot;
-
                   return (
                     <SidebarMenuItem key={member.agentId}>
                       <SidebarMenuButton
                         render={<Link href={`/missions?new=${member.agentId}`} />}
                         tooltip={`New mission with ${member.name}`}
                       >
-                        <Icon />
+                        <AgentIcon className="size-5 rounded-md ring-0" icon={member.icon} />
                         <span>{member.name}</span>
                       </SidebarMenuButton>
                       <SidebarMenuAction

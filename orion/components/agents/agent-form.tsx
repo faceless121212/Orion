@@ -7,7 +7,7 @@ import {
   generateAgentPromptAction,
   saveAgentAction,
 } from "@/app/(dashboard)/(admin)/agents/actions";
-import { agentIconComponents } from "@/components/agents/agent-icon";
+import { AgentIcon } from "@/components/agents/agent-icon";
 import { FieldError } from "@/components/auth/field-error";
 import { FormField } from "@/components/forms/form-field";
 import { FormMessage } from "@/components/forms/form-message";
@@ -20,7 +20,7 @@ import {
   agentIcons,
   agentModels,
   defaultAgentModel,
-  type AgentIcon,
+  type AgentIcon as AgentIconName,
   type AgentStatus,
 } from "@/lib/agents/catalog";
 import { initialFormState } from "@/lib/form-state";
@@ -31,7 +31,7 @@ export type AgentFormValues = {
   name: string;
   description: string;
   model: string;
-  icon: AgentIcon;
+  icon: AgentIconName;
   status: AgentStatus;
   systemPrompt: string;
 };
@@ -63,7 +63,7 @@ export function AgentForm({
   const [systemPrompt, setSystemPrompt] = useState(agent.systemPrompt);
   const [model, setModel] = useState(agent.model);
   const [status, setStatus] = useState<AgentStatus>(agent.status);
-  const [icon, setIcon] = useState<AgentIcon>(agent.icon);
+  const [icon, setIcon] = useState<AgentIconName>(agent.icon);
   const [generationError, setGenerationError] = useState<string>();
   const [generating, startGenerating] = useTransition();
 
@@ -136,7 +136,6 @@ export function AgentForm({
             <legend className="mb-2 text-sm font-medium">Icon</legend>
             <div className="grid grid-cols-6 gap-2">
               {agentIcons.map((option) => {
-                const Icon = agentIconComponents[option];
                 const selected = option === icon;
 
                 return (
@@ -144,14 +143,14 @@ export function AgentForm({
                     aria-label={`Use ${option} icon`}
                     aria-pressed={selected}
                     className={cn(
-                      "grid aspect-square place-items-center rounded-lg border text-muted-foreground transition hover:bg-muted",
-                      selected && "border-blue-500 bg-blue-50 text-blue-600 ring-2 ring-blue-100",
+                      "grid aspect-square place-items-center overflow-hidden rounded-xl border-2 border-transparent opacity-80 transition hover:opacity-100",
+                      selected && "border-blue-500 opacity-100 ring-2 ring-blue-100",
                     )}
                     key={option}
                     onClick={() => setIcon(option)}
                     type="button"
                   >
-                    <Icon className="size-4" />
+                    <AgentIcon className="size-full rounded-[10px] ring-0" icon={option} />
                   </button>
                 );
               })}

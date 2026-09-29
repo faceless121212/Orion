@@ -36,7 +36,7 @@ export default async function SquadPage() {
           ))}
         </div>
       ) : (
-        <EmptyState description="Your squad is empty. An administrator assigns agents to you from the Users page." icon={Users} title="No agents assigned yet" />
+        <EmptyState description="Your squad is empty. An administrator assigns agents to you from the Users page." icon={Users} image="/brand/empty/squad.webp" title="No agents assigned yet" />
       )}
     </>
   );

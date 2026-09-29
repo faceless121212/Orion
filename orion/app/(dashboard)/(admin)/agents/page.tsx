@@ -59,7 +59,7 @@ export default async function AgentsPage() {
           </Table>
         </Card>
       ) : (
-        <EmptyState action={newAgent} description="Configure names, models, system prompts, icons, and availability from this workspace." icon={Bot} title="Build your first agent" />
+        <EmptyState action={newAgent} description="Configure names, models, system prompts, icons, and availability from this workspace." icon={Bot} image="/brand/empty/agents.webp" title="Build your first agent" />
       )}
     </>
   );
