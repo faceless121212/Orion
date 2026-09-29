@@ -27,7 +27,7 @@ export function InstructionsForm({
     <form action={formAction} className="grid gap-3">
       <input name="agentId" type="hidden" value={agentId} />
       <FormField
-        description="Only you see these. They are added to this agent's instructions on your missions."
+        description="Added to this agent's instructions on your missions. Administrators can also see them."
         errors={state.errors?.customInstructions}
         id={fieldId}
         label={`Personal instructions for ${agentName}`}

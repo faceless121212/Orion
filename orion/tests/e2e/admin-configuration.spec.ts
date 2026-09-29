@@ -50,7 +50,7 @@ test("an admin configures an agent and the employee sees it in My Squad", async 
   const userPage = await (await browser.newContext()).newPage();
   await signInAs(userPage, "user");
   await userPage.getByRole("link", { name: "My Squad" }).click();
-  await expect(userPage.getByText(agentName)).toBeVisible();
+  await expect(userPage.getByText(agentName, { exact: true })).toBeVisible();
   await userPage
     .getByLabel(`Personal instructions for ${agentName}`)
     .fill("Keep every report under one page.");
@@ -65,7 +65,7 @@ test("an admin configures an agent and the employee sees it in My Squad", async 
   await expect(adminPage.getByText("Agent saved.")).toBeVisible();
 
   await userPage.reload();
-  await expect(userPage.getByText(agentName)).toHaveCount(0);
+  await expect(userPage.getByText(agentName, { exact: true })).toHaveCount(0);
 });
 
 test("a regular user cannot open agent administration", async ({ page }) => {

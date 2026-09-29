@@ -53,8 +53,10 @@ to authenticated
 using ((select public.is_admin()))
 with check ((select public.is_admin()));
 
+-- Supabase grants every privilege on new public tables by default; reset to
+-- exactly what the policies above are written for.
+revoke all on table public.company_settings from anon, authenticated;
 grant select, insert, update on table public.company_settings to authenticated;
-revoke all on table public.company_settings from anon;
 
 -- Agents --------------------------------------------------------------------
 
@@ -144,8 +146,8 @@ for delete
 to authenticated
 using ((select public.is_admin()));
 
+revoke all on table public.agents from anon, authenticated;
 grant select, insert, update, delete on table public.agents to authenticated;
-revoke all on table public.agents from anon;
 
 -- Assignment policies
 
@@ -177,7 +179,15 @@ create policy "Users can edit their own instructions"
 on public.user_agents
 for update
 to authenticated
-using (user_id = (select auth.uid()))
+using (
+  user_id = (select auth.uid())
+  and exists (
+    select 1
+    from public.agents
+    where agents.id = user_agents.agent_id
+      and agents.status = 'active'
+  )
+)
 with check (user_id = (select auth.uid()));
 
 create policy "Admins can edit any instructions"
@@ -188,6 +198,8 @@ using ((select public.is_admin()))
 with check ((select public.is_admin()));
 
 -- Only personal instructions are editable; ownership columns stay fixed.
+-- The table-level revoke matters: without it Supabase's default UPDATE grant
+-- would let a user repoint their own row at any agent_id.
+revoke all on table public.user_agents from anon, authenticated;
 grant select, insert, delete on table public.user_agents to authenticated;
 grant update (custom_instructions) on table public.user_agents to authenticated;
-revoke all on table public.user_agents from anon;

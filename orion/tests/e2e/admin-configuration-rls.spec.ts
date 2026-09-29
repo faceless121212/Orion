@@ -89,6 +89,13 @@ test("a user edits only their own personal instructions", async () => {
       .eq("user_id", user.userId)
       .eq("agent_id", agent!.id);
     expect(reassignError).not.toBeNull();
+
+    const { error: repointError } = await user.supabase
+      .from("user_agents")
+      .update({ agent_id: crypto.randomUUID() })
+      .eq("user_id", user.userId)
+      .eq("agent_id", agent!.id);
+    expect(repointError).not.toBeNull();
   } finally {
     await admin.supabase.from("agents").delete().eq("id", agent!.id);
   }
