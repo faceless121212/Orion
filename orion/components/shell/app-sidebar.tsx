@@ -9,16 +9,15 @@ import {
   Cable,
   ClipboardList,
   LogOut,
+  Plus,
   Settings,
   Sparkles,
   Users,
 } from "lucide-react";
 
 import { logoutAction } from "@/app/(auth)/actions";
-import {
-  Avatar,
-  AvatarFallback,
-} from "@/components/ui/avatar";
+import { agentIconComponents } from "@/components/agents/agent-icon";
+import { UserAvatar } from "@/components/shell/user-avatar";
 import {
   Sidebar,
   SidebarContent,
@@ -28,13 +27,14 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { getNavigation } from "@/lib/auth/access";
 import type { CurrentProfile } from "@/lib/auth/session";
-import { initials } from "@/lib/utils";
+import type { AgentIcon } from "@/lib/agents/catalog";
 
 const icons = {
   "/missions": ClipboardList,
@@ -47,7 +47,9 @@ const icons = {
   "/settings": Settings,
 } as const;
 
-export function AppSidebar({ profile }: { profile: CurrentProfile }) {
+export type SidebarSquadItem = { agentId: string; name: string; icon: AgentIcon };
+
+export function AppSidebar({ profile, squad }: { profile: CurrentProfile; squad: SidebarSquadItem[] }) {
   const pathname = usePathname();
   const items = getNavigation(profile.role);
 
@@ -97,17 +99,54 @@ export function AppSidebar({ profile }: { profile: CurrentProfile }) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>My Squad</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {squad.length ? (
+                squad.map((member) => {
+                  const Icon = agentIconComponents[member.icon] ?? Bot;
+
+                  return (
+                    <SidebarMenuItem key={member.agentId}>
+                      <SidebarMenuButton
+                        render={<Link href={`/missions?new=${member.agentId}`} />}
+                        tooltip={`New mission with ${member.name}`}
+                      >
+                        <Icon />
+                        <span>{member.name}</span>
+                      </SidebarMenuButton>
+                      <SidebarMenuAction
+                        aria-label={`New mission with ${member.name}`}
+                        render={<Link href={`/missions?new=${member.agentId}`} />}
+                        showOnHover
+                      >
+                        <Plus />
+                      </SidebarMenuAction>
+                    </SidebarMenuItem>
+                  );
+                })
+              ) : (
+                <p className="px-2 py-1 text-xs text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">
+                  No agents assigned yet.
+                </p>
+              )}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="p-3">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton className="h-12" render={<Link href="/settings" />} size="lg">
-              <Avatar className="size-8 rounded-lg">
-                <AvatarFallback className="rounded-lg bg-blue-100 text-xs font-semibold text-blue-700">
-                  {initials(profile.fullName)}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar
+                avatarUrl={profile.avatarUrl}
+                className="size-8 rounded-lg"
+                fallbackClassName="rounded-lg text-xs"
+                name={profile.fullName}
+              />
               <span className="grid min-w-0 flex-1 text-left text-xs leading-tight">
                 <span className="truncate font-semibold">{profile.fullName}</span>
                 <span className="truncate text-muted-foreground capitalize">{profile.role}</span>

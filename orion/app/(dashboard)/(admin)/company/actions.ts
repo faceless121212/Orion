@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/session";
 import { companySettingsSchema } from "@/lib/company/validation";
-import { fieldsFrom, type FormState } from "@/lib/form-state";
-import { createClient } from "@/lib/supabase/server";
+import { failureMessage, fieldsFrom, type FormState } from "@/lib/form-state";
+import { getRepository } from "@/lib/repository";
 
 export async function saveCompanySettingsAction(
   _state: FormState,
@@ -24,19 +24,14 @@ export async function saveCompanySettingsAction(
     };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("company_settings").upsert({
-    id: true,
-    company_name: parsed.data.companyName,
-    overview: parsed.data.overview,
-    audience: parsed.data.audience,
-    brand_voice: parsed.data.brandVoice,
-    writing_guidelines: parsed.data.writingGuidelines,
-    updated_by: profile.id,
-  });
+  const result = await getRepository().saveCompanySettings(parsed.data, profile.id);
 
-  if (error) {
-    return { status: "error", message: "Unable to save company context. Try again.", values: fields };
+  if (!result.ok) {
+    return {
+      status: "error",
+      message: failureMessage(result, "Unable to save company context. Try again."),
+      values: fields,
+    };
   }
 
   revalidatePath("/company");

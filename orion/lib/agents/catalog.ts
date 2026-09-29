@@ -33,3 +33,16 @@ export type AgentStatus = (typeof agentStatuses)[number];
 export function modelLabel(modelId: string) {
   return agentModels.find((model) => model.id === modelId)?.label ?? modelId;
 }
+
+/** USD per million tokens, used for usage cost estimates. */
+export const modelPricing: Record<string, { input: number; output: number }> = {
+  "claude-opus-5": { input: 5, output: 25 },
+  "claude-sonnet-5": { input: 2, output: 10 },
+  "claude-haiku-4-5": { input: 1, output: 5 },
+  "claude-fable-5-1": { input: 10, output: 50 },
+};
+
+export function estimateCostUsd(model: string, inputTokens: number, outputTokens: number) {
+  const price = modelPricing[model] ?? modelPricing["claude-opus-5"];
+  return (inputTokens * price.input + outputTokens * price.output) / 1_000_000;
+}

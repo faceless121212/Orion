@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { CompanySettings } from "@/lib/company/validation";
-import { initialFormState } from "@/lib/form-state";
+import { formKey, initialFormState } from "@/lib/form-state";
 
 const textFields: Array<{
   name: Exclude<keyof CompanySettings, "companyName">;
@@ -49,7 +49,7 @@ export function CompanyForm({ settings }: { settings: CompanySettings }) {
   const [state, formAction, pending] = useActionState(saveCompanySettingsAction, initialFormState);
 
   return (
-    <form action={formAction}>
+    <form action={formAction} key={`${formKey(state)}|${JSON.stringify(settings)}`}>
       <Card className="max-w-3xl shadow-none">
         <CardHeader>
           <CardTitle>Company context</CardTitle>

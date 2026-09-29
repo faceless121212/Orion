@@ -1,41 +1,38 @@
 import { cache } from "react";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import type { AppRole } from "@/lib/auth/access";
+import { DEMO_USER_COOKIE, isDemoMode } from "@/lib/demo/mode";
+import type { Profile } from "@/lib/domain/types";
+import { getRepository } from "@/lib/repository";
 import { createClient } from "@/lib/supabase/server";
 
-export type CurrentProfile = {
-  id: string;
-  email: string;
-  fullName: string;
-  role: AppRole;
-};
+export type CurrentProfile = Profile;
+
+async function currentUserId() {
+  if (isDemoMode()) {
+    return (await cookies()).get(DEMO_USER_COOKIE)?.value ?? null;
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getClaims();
+  return error ? null : (data?.claims?.sub ?? null);
+}
 
 export const getCurrentProfile = cache(async (): Promise<CurrentProfile | null> => {
-  const supabase = await createClient();
-  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
-  const userId = claimsData?.claims?.sub;
+  const userId = await currentUserId();
 
-  if (claimsError || !userId) {
+  if (!userId) {
     return null;
   }
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id,email,full_name,role")
-    .eq("id", userId)
-    .single();
+  const profile = await getRepository().getProfile(userId).catch(() => null);
 
-  if (error || !data) {
-    redirect("/login?error=profile-unavailable");
+  if (!profile) {
+    redirect(isDemoMode() ? "/login" : "/login?error=profile-unavailable");
   }
 
-  return {
-    id: data.id,
-    email: data.email,
-    fullName: data.full_name,
-    role: data.role as AppRole,
-  };
+  return profile;
 });
 
 export async function requireUser() {

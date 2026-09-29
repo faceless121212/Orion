@@ -1,11 +1,14 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import type { AuthActionState } from "@/lib/auth/action-state";
 import { isRegistrationAllowed } from "@/lib/auth/registration-access";
 import { registerWithPassword } from "@/lib/auth/service";
 import { loginSchema, registrationSchema } from "@/lib/auth/validation";
+import { demoRepository } from "@/lib/demo/repository";
+import { DEMO_USER_COOKIE, isDemoMode } from "@/lib/demo/mode";
 import { getPublicEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -86,7 +89,35 @@ export async function loginAction(
 }
 
 export async function logoutAction() {
+  if (isDemoMode()) {
+    (await cookies()).delete(DEMO_USER_COOKIE);
+    redirect("/login");
+  }
+
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/login");
+}
+
+/** Demo mode only: sign in as one of the seeded personas. */
+export async function demoSignInAction(formData: FormData) {
+  if (!isDemoMode()) {
+    throw new Error("Demo sign-in is disabled.");
+  }
+
+  const userId = formData.get("userId");
+  const profile = typeof userId === "string" ? await demoRepository.getProfile(userId) : null;
+
+  if (!profile) {
+    redirect("/login");
+  }
+
+  (await cookies()).set(DEMO_USER_COOKIE, profile.id, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+  });
+
+  const next = formData.get("next");
+  redirect(typeof next === "string" && next.startsWith("/") && !next.startsWith("//") ? next : "/missions");
 }

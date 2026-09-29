@@ -9,10 +9,10 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { modelLabel } from "@/lib/agents/catalog";
-import { listAgents } from "@/lib/data/agents";
+import { getRepository } from "@/lib/repository";
 
 export default async function AgentsPage() {
-  const agents = await listAgents();
+  const agents = await getRepository().listAgents();
   const newAgent = (
     <Link className={buttonVariants()} href="/agents/new">
       <Plus />

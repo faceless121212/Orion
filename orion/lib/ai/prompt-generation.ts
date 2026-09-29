@@ -43,9 +43,39 @@ export function buildPromptRequest(brief: PromptBrief, company: CompanySettings)
   ].join("\n");
 }
 
+export type PromptGenerationUsage = { model: string; inputTokens: number; outputTokens: number };
+
 export type PromptGenerationResult =
-  | { status: "success"; prompt: string }
+  | { status: "success"; prompt: string; usage?: PromptGenerationUsage }
   | { status: "error"; message: string };
+
+/** Offline stand-in used in demo mode when no API key is configured. */
+export function buildTemplatePrompt(brief: PromptBrief, company: CompanySettings) {
+  const companyName = company.companyName.trim() || "the company";
+  const lines = [
+    `You are ${brief.name}, an AI specialist working for ${companyName}.`,
+    "",
+    "Your role",
+    brief.description,
+    "",
+    "Company context",
+    company.overview.trim() || "No company overview has been provided yet.",
+  ];
+
+  if (company.audience.trim()) lines.push("", "Audience", company.audience.trim());
+  if (company.brandVoice.trim()) lines.push("", "Voice", company.brandVoice.trim());
+  if (company.writingGuidelines.trim()) lines.push("", "Writing guidelines", company.writingGuidelines.trim());
+
+  lines.push(
+    "",
+    "Standards",
+    "- Produce complete, well-structured documents ready to share.",
+    "- State assumptions and ask for missing information instead of inventing facts.",
+    "- Follow the employee's personal instructions when they are provided.",
+  );
+
+  return lines.join("\n");
+}
 
 type MessagesClient = Pick<Anthropic, "beta">;
 
@@ -79,5 +109,13 @@ export async function generateSystemPrompt(
     return { status: "error", message: "The model returned an empty prompt. Try again." };
   }
 
-  return { status: "success", prompt };
+  return {
+    status: "success",
+    prompt,
+    usage: {
+      model: PROMPT_GENERATION_MODEL,
+      inputTokens: response.usage.input_tokens,
+      outputTokens: response.usage.output_tokens,
+    },
+  };
 }

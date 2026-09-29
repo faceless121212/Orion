@@ -6,11 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { listUsers } from "@/lib/data/users";
+import { getRepository } from "@/lib/repository";
 import { initials } from "@/lib/utils";
 
 export default async function UsersPage() {
-  const users = await listUsers();
+  const users = await getRepository().listUsers();
 
   return (
     <>

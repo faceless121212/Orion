@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildPromptRequest,
+  buildTemplatePrompt,
   generateSystemPrompt,
   PROMPT_GENERATION_MODEL,
 } from "@/lib/ai/prompt-generation";
@@ -47,16 +48,28 @@ describe("buildPromptRequest", () => {
   });
 });
 
+describe("buildTemplatePrompt", () => {
+  it("builds an offline prompt that uses the filled-in company context", () => {
+    const prompt = buildTemplatePrompt(brief, company);
+
+    expect(prompt).toContain("You are Proposal Writer, an AI specialist working for Acme Clinics.");
+    expect(prompt).toContain("Warm and plain-spoken.");
+    expect(prompt).not.toContain("Audience");
+  });
+});
+
 describe("generateSystemPrompt", () => {
   it("returns the model's text with server-side fallbacks enabled", async () => {
     const { client, calls } = fakeClient({
       stop_reason: "end_turn",
       content: [{ type: "text", text: "  You are Acme's proposal writer.  " }],
+      usage: { input_tokens: 900, output_tokens: 400 },
     });
 
     await expect(generateSystemPrompt(client, brief, company)).resolves.toEqual({
       status: "success",
       prompt: "You are Acme's proposal writer.",
+      usage: { model: PROMPT_GENERATION_MODEL, inputTokens: 900, outputTokens: 400 },
     });
     expect(calls[0]).toMatchObject({
       model: PROMPT_GENERATION_MODEL,

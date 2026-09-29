@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 
 import { assignmentSchema } from "@/lib/agents/validation";
 import { requireAdmin } from "@/lib/auth/session";
-import { fieldsFrom, type FormState } from "@/lib/form-state";
-import { createClient } from "@/lib/supabase/server";
+import { failureMessage, fieldsFrom, type FormState } from "@/lib/form-state";
+import { getRepository } from "@/lib/repository";
 
 function revalidateSquad(userId: string) {
   revalidatePath("/users");
@@ -22,31 +22,13 @@ export async function assignAgentAction(_state: FormState, formData: FormData): 
     return { status: "error", message: "Choose an agent to assign." };
   }
 
-  const supabase = await createClient();
-  const [{ data: agent }, { data: user }] = await Promise.all([
-    supabase.from("agents").select("status").eq("id", parsed.data.agentId).maybeSingle(),
-    supabase.from("profiles").select("id").eq("id", parsed.data.userId).maybeSingle(),
-  ]);
+  const result = await getRepository().assignAgent(parsed.data.userId, parsed.data.agentId, profile.id);
 
-  if (!user) {
-    return { status: "error", message: "This user no longer exists." };
-  }
-
-  if (agent?.status !== "active") {
-    return { status: "error", message: "Only active agents can be assigned." };
-  }
-
-  const { error } = await supabase.from("user_agents").upsert(
-    {
-      user_id: parsed.data.userId,
-      agent_id: parsed.data.agentId,
-      assigned_by: profile.id,
-    },
-    { onConflict: "user_id,agent_id", ignoreDuplicates: true },
-  );
-
-  if (error) {
-    return { status: "error", message: "Unable to assign this agent. Try again." };
+  if (!result.ok) {
+    return {
+      status: "error",
+      message: result.reason === "not_found" ? "This user no longer exists." : failureMessage(result, "Unable to assign this agent. Try again."),
+    };
   }
 
   revalidateSquad(parsed.data.userId);
@@ -61,14 +43,9 @@ export async function removeAssignmentAction(formData: FormData) {
     throw new Error("Invalid assignment.");
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("user_agents")
-    .delete()
-    .eq("user_id", parsed.data.userId)
-    .eq("agent_id", parsed.data.agentId);
+  const result = await getRepository().removeAssignment(parsed.data.userId, parsed.data.agentId);
 
-  if (error) {
+  if (!result.ok) {
     throw new Error("Unable to remove this assignment.");
   }
 
