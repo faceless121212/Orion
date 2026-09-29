@@ -29,7 +29,9 @@ export async function signedInClient(role: "admin" | "user") {
   );
 
   if (error || !data.user) {
-    throw new Error(`Unable to sign in the E2E ${role} account.`);
+    throw new Error(
+      `Unable to sign in the E2E ${role} account: ${error?.message ?? "no user returned"} (status ${error?.status ?? "n/a"}).`,
+    );
   }
 
   return { supabase, userId: data.user.id };
