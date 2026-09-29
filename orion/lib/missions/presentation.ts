@@ -39,3 +39,15 @@ export function formatRelative(iso: string, now = Date.now()) {
 
   return "just now";
 }
+
+/** Output links must be relative or https; anything else (e.g. javascript:) is dropped. */
+export function safeOutputUrl(url: string | null) {
+  if (!url) return null;
+  if (url.startsWith("/") && !url.startsWith("//") && !url.includes("\\")) return url;
+
+  try {
+    return new URL(url).protocol === "https:" ? url : null;
+  } catch {
+    return null;
+  }
+}

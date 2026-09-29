@@ -386,6 +386,8 @@ export const demoRepository: Repository = {
 
   async detachKnowledge(agentId, fileId) {
     const state = demoState();
+    if (!state.agents.some((agent) => agent.id === agentId)) return fail("not_found");
+
     state.knowledge = state.knowledge.filter((row) => !(row.agentId === agentId && row.fileId === fileId));
     return ok();
   },

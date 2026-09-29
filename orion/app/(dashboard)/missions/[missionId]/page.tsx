@@ -13,7 +13,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { uuidSchema } from "@/lib/agents/validation";
 import { requireUser } from "@/lib/auth/session";
-import { canEditMission, formatRelative, outputFormatLabels } from "@/lib/missions/presentation";
+import { canEditMission, formatRelative, outputFormatLabels, safeOutputUrl } from "@/lib/missions/presentation";
 import { getRepository } from "@/lib/repository";
 
 function Timestamp({ label, value }: { label: string; value: string | null }) {
@@ -45,6 +45,7 @@ export default async function MissionPage({ params }: { params: Promise<{ missio
   }
 
   const editable = canEditMission(mission.status);
+  const outputUrl = safeOutputUrl(mission.outputUrl);
   const squadOptions = squad
     .filter((member) => member.status === "active")
     .map(({ agentId, name }) => ({ agentId, name }));
@@ -112,14 +113,19 @@ export default async function MissionPage({ params }: { params: Promise<{ missio
             </Card>
           ) : null}
 
-          {mission.status === "completed" && mission.outputUrl ? (
+          {mission.status === "completed" && outputUrl ? (
             <Card className="border-emerald-200 bg-emerald-50/50 shadow-none">
               <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="flex items-center gap-2 text-sm font-medium text-emerald-900">
                   <CheckCircle2 className="size-5" />
                   Your {outputFormatLabels[mission.outputFormat]} is ready.
                 </p>
-                <Link className={buttonVariants()} href={mission.outputUrl} target={mission.outputUrl.startsWith("http") ? "_blank" : undefined}>
+                <Link
+                  className={buttonVariants()}
+                  href={outputUrl}
+                  rel={outputUrl.startsWith("https:") ? "noreferrer" : undefined}
+                  target={outputUrl.startsWith("https:") ? "_blank" : undefined}
+                >
                   Open {outputFormatLabels[mission.outputFormat]}
                   <ExternalLink />
                 </Link>

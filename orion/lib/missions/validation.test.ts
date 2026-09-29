@@ -32,3 +32,17 @@ describe("validateAvatar", () => {
     expect(validateAvatar({ size: 0, type: "image/png" })).toMatch(/Choose/);
   });
 });
+
+describe("safeOutputUrl", () => {
+  it("allows relative and https links only", async () => {
+    const { safeOutputUrl } = await import("@/lib/missions/presentation");
+
+    expect(safeOutputUrl("/missions/1/output")).toBe("/missions/1/output");
+    expect(safeOutputUrl("https://docs.google.com/document/d/abc")).toBe("https://docs.google.com/document/d/abc");
+    expect(safeOutputUrl("javascript:alert(1)")).toBeNull();
+    expect(safeOutputUrl("http://example.com")).toBeNull();
+    expect(safeOutputUrl("//evil.com")).toBeNull();
+    expect(safeOutputUrl("/\\evil.com")).toBeNull();
+    expect(safeOutputUrl(null)).toBeNull();
+  });
+});

@@ -99,6 +99,11 @@ export async function logoutAction() {
   redirect("/login");
 }
 
+function isSafeRedirect(value: FormDataEntryValue | null): value is string {
+  // Same-origin paths only; browsers treat "\\" like "/", so "/\\evil.com" is external.
+  return typeof value === "string" && /^\/(?![/\\])/.test(value) && !value.includes("\\");
+}
+
 /** Demo mode only: sign in as one of the seeded personas. */
 export async function demoSignInAction(formData: FormData) {
   if (!isDemoMode()) {
@@ -119,5 +124,5 @@ export async function demoSignInAction(formData: FormData) {
   });
 
   const next = formData.get("next");
-  redirect(typeof next === "string" && next.startsWith("/") && !next.startsWith("//") ? next : "/missions");
+  redirect(isSafeRedirect(next) ? next : "/missions");
 }
