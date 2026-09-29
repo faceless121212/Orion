@@ -1,4 +1,5 @@
 import { estimateCostUsd } from "@/lib/agents/catalog";
+import { orionCompanyContext } from "@/lib/demo/orion-context";
 import type {
   AgentRecord,
   CompanySettings,
@@ -42,11 +43,11 @@ export const demoUserIds = {
 } as const;
 
 const agentIds = {
-  proposal: "10000000-0000-4000-8000-000000000001",
-  research: "10000000-0000-4000-8000-000000000002",
-  finance: "10000000-0000-4000-8000-000000000003",
-  copy: "10000000-0000-4000-8000-000000000004",
-  faq: "10000000-0000-4000-8000-000000000005",
+  copywriter: "10000000-0000-4000-8000-000000000001",
+  researcher: "10000000-0000-4000-8000-000000000002",
+  analyst: "10000000-0000-4000-8000-000000000003",
+  events: "10000000-0000-4000-8000-000000000004",
+  legacy: "10000000-0000-4000-8000-000000000005",
 } as const;
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -65,87 +66,79 @@ export function createSeed(now = Date.now()): DemoState {
   const random = prng(42);
 
   const profiles: Profile[] = [
-    { id: demoUserIds.admin, email: "alex@northwind.demo", fullName: "Alex Morgan", role: "admin", jobTitle: "Head of Operations", avatarUrl: "/brand/avatars/alex.webp" },
-    { id: demoUserIds.priya, email: "priya@northwind.demo", fullName: "Priya Shah", role: "user", jobTitle: "Marketing Manager", avatarUrl: "/brand/avatars/priya.webp" },
-    { id: demoUserIds.diego, email: "diego@northwind.demo", fullName: "Diego Alvarez", role: "user", jobTitle: "Sales Lead", avatarUrl: "/brand/avatars/diego.webp" },
-    { id: demoUserIds.mei, email: "mei@northwind.demo", fullName: "Mei Chen", role: "user", jobTitle: "Finance Analyst", avatarUrl: "/brand/avatars/mei.webp" },
+    { id: demoUserIds.admin, email: "alex@orion.demo", fullName: "Alex Morgan", role: "admin", jobTitle: "Head of Community", avatarUrl: "/brand/avatars/alex.webp" },
+    { id: demoUserIds.priya, email: "priya@orion.demo", fullName: "Priya Shah", role: "user", jobTitle: "Community Marketing Manager", avatarUrl: "/brand/avatars/priya.webp" },
+    { id: demoUserIds.diego, email: "diego@orion.demo", fullName: "Diego Alvarez", role: "user", jobTitle: "Partnerships Lead", avatarUrl: "/brand/avatars/diego.webp" },
+    { id: demoUserIds.mei, email: "mei@orion.demo", fullName: "Mei Chen", role: "user", jobTitle: "Growth Analyst", avatarUrl: "/brand/avatars/mei.webp" },
   ];
 
-  const company: CompanySettings = {
-    companyName: "Northwind Clinics",
-    overview:
-      "Northwind Clinics builds scheduling and patient-intake software for independent physiotherapy and dental clinics. Our flagship product, Northwind Desk, replaces paper intake forms and phone booking.",
-    audience: "Clinic owners and office managers at practices with 2–25 staff in the US and Canada.",
-    brandVoice: "Warm, plain-spoken, and confident. We sound like a helpful colleague, never a salesperson.",
-    writingGuidelines:
-      "Use American English. Say “clinic”, not “practice”. Keep paragraphs under four sentences. Never promise specific ROI numbers.",
-  };
+  const company: CompanySettings = { ...orionCompanyContext };
 
   const agents: AgentRecord[] = [
     {
-      id: agentIds.proposal,
-      name: "Proposal Writer",
-      description: "Drafts client proposals from a short brief using our pricing tiers and case studies.",
+      id: agentIds.copywriter,
+      name: "Community Copywriter",
+      description: "Writes welcome posts, announcements, and member emails in the Orion voice.",
       model: "claude-opus-5",
       icon: "pen",
       status: "active",
       systemPrompt:
-        "You are Northwind Clinics' proposal writer. Turn a sales brief into a clear, persuasive proposal for a clinic owner: summary, the clinic's current pain, how Northwind Desk solves it, rollout plan, and pricing. Use the attached pricing sheet and case studies; never invent prices or results.",
+        "You're Orion's community copywriter. Write announcements, welcome posts, and member emails that help people feel welcomed, valued, and heard. Follow the Orion voice: friendly, encouraging, clear, and conversational, with benefit-first headlines and natural contractions. Offer two headline options, keep paragraphs short, and never sound corporate, salesy, or pushy.",
       updatedAt: at(12),
     },
     {
-      id: agentIds.research,
-      name: "Market Researcher",
-      description: "Researches competitors and market trends and summarizes findings with sources.",
+      id: agentIds.researcher,
+      name: "Community Researcher",
+      description: "Researches community trends and platforms, and summarizes what it finds with sources.",
       model: "claude-sonnet-5",
       icon: "search",
       status: "active",
       systemPrompt:
-        "You are Northwind's market researcher. Investigate the question in the brief, compare competitors fairly, and cite every source. Separate facts from interpretation and finish with three recommendations.",
+        "You're Orion's community researcher. Investigate the question in the brief, compare platforms and approaches fairly, and cite every source. Separate facts from interpretation, and finish with three practical recommendations for community builders. Keep it clear and encouraging.",
       updatedAt: at(20),
     },
     {
-      id: agentIds.finance,
-      name: "Finance Analyst",
-      description: "Builds budget and forecast sheets and explains the numbers in plain language.",
+      id: agentIds.analyst,
+      name: "Engagement Analyst",
+      description: "Turns community data into engagement reports and explains the numbers in plain language.",
       model: "claude-opus-5",
       icon: "chart",
       status: "active",
       systemPrompt:
-        "You are Northwind's finance analyst. Produce well-structured spreadsheets with labeled assumptions, formulas described in words, and a short narrative explaining the drivers and risks.",
+        "You're Orion's engagement analyst. Build well-structured spreadsheets with labeled assumptions, and add a short narrative that explains what's driving participation. Focus on opportunities: say \"here are a few ways to boost engagement\" rather than dwelling on what's missing.",
       updatedAt: at(8),
     },
     {
-      id: agentIds.copy,
-      name: "Brand Copywriter",
-      description: "Writes landing pages, emails, and social posts in the Northwind voice.",
+      id: agentIds.events,
+      name: "Event Promoter",
+      description: "Plans live events and writes the promotion that gets members to show up.",
       model: "claude-sonnet-5",
       icon: "megaphone",
       status: "active",
       systemPrompt:
-        "You are Northwind's brand copywriter. Write in a warm, plain-spoken voice for clinic owners. Offer two variants for every headline and keep calls to action specific.",
+        "You're Orion's event promoter. Plan live events that turn passive members into active contributors, and write invitations, reminders, and follow-ups in the Orion voice. Keep calls to action specific and friendly, and always explain why the event is worth members' time.",
       updatedAt: at(3),
     },
     {
-      id: agentIds.faq,
-      name: "Legacy FAQ Bot",
-      description: "Answered support questions before the help center launched.",
+      id: agentIds.legacy,
+      name: "Legacy Help Bot",
+      description: "Answered member support questions before the help center launched.",
       model: "claude-haiku-4-5",
       icon: "bot",
       status: "archived",
-      systemPrompt: "You answer common Northwind Desk support questions briefly and link to the help center.",
+      systemPrompt: "You answer common Orion member questions briefly and warmly, and link to the help center when it helps.",
       updatedAt: at(45),
     },
   ];
 
   const assignments: DemoAssignment[] = [
-    { userId: demoUserIds.admin, agentId: agentIds.proposal, customInstructions: "", createdAt: at(30) },
-    { userId: demoUserIds.admin, agentId: agentIds.research, customInstructions: "Focus on the Canadian market first.", createdAt: at(30) },
-    { userId: demoUserIds.priya, agentId: agentIds.copy, customInstructions: "I run campaigns for dental clinics — use dental examples.", createdAt: at(25) },
-    { userId: demoUserIds.priya, agentId: agentIds.research, customInstructions: "", createdAt: at(25) },
-    { userId: demoUserIds.priya, agentId: agentIds.faq, customInstructions: "", createdAt: at(60) },
-    { userId: demoUserIds.diego, agentId: agentIds.proposal, customInstructions: "Always include the 90-day onboarding offer.", createdAt: at(22) },
-    { userId: demoUserIds.mei, agentId: agentIds.finance, customInstructions: "Use CAD and fiscal quarters starting in April.", createdAt: at(18) },
+    { userId: demoUserIds.admin, agentId: agentIds.copywriter, customInstructions: "", createdAt: at(30) },
+    { userId: demoUserIds.admin, agentId: agentIds.researcher, customInstructions: "Focus on creator and education communities first.", createdAt: at(30) },
+    { userId: demoUserIds.priya, agentId: agentIds.events, customInstructions: "Most of my events are for coaching communities, so use coaching examples.", createdAt: at(25) },
+    { userId: demoUserIds.priya, agentId: agentIds.researcher, customInstructions: "", createdAt: at(25) },
+    { userId: demoUserIds.priya, agentId: agentIds.legacy, customInstructions: "", createdAt: at(60) },
+    { userId: demoUserIds.diego, agentId: agentIds.copywriter, customInstructions: "Partner-facing copy: mention the co-marketing program when it fits.", createdAt: at(22) },
+    { userId: demoUserIds.mei, agentId: agentIds.analyst, customInstructions: "Report by month and call out the top three spaces by participation.", createdAt: at(18) },
   ];
 
   const mission = (
@@ -164,7 +157,7 @@ export function createSeed(now = Date.now()): DemoState {
     agentId,
     title,
     brief,
-    webSearch: agentId === agentIds.research,
+    webSearch: agentId === agentIds.researcher,
     outputFormat,
     status,
     outputUrl: status === "completed" ? `/missions/${id}/output` : null,
@@ -178,27 +171,27 @@ export function createSeed(now = Date.now()): DemoState {
   });
 
   const missions: DemoMission[] = [
-    mission("20000000-0000-4000-8000-000000000001", demoUserIds.admin, agentIds.proposal, "Proposal for Lakeside Physio", "Three-location physio group in Toronto, currently on paper intake. Wants online booking before January. Budget-conscious; emphasize the 90-day onboarding.", "completed", "google_doc", 2),
-    mission("20000000-0000-4000-8000-000000000002", demoUserIds.admin, agentIds.research, "Competitor scan: Jane App vs. Cliniko", "Compare pricing, intake features, and Canadian data residency for Jane App and Cliniko. Who are we losing deals to and why?", "completed", "pdf", 5),
-    mission("20000000-0000-4000-8000-000000000003", demoUserIds.admin, agentIds.proposal, "Renewal pitch for Bright Smile Dental", "Existing customer, 2 years in. Pitch the new reminders add-on. Mention their no-show rate dropped after launch (don't quote a number).", "queued", "google_doc", 0),
-    mission("20000000-0000-4000-8000-000000000004", demoUserIds.admin, agentIds.research, "US telehealth regulation summary", "Summarize 2026 telehealth rule changes relevant to physiotherapy clinics in the US.", "failed", "pdf", 1, {
+    mission("20000000-0000-4000-8000-000000000001", demoUserIds.admin, agentIds.copywriter, "Welcome post for new members", "A warm welcome post for our community space: say hi, explain where to start, and invite people to introduce themselves. Keep it short and encouraging.", "completed", "google_doc", 2),
+    mission("20000000-0000-4000-8000-000000000002", demoUserIds.admin, agentIds.researcher, "How creators run paid communities", "Research how creators structure paid memberships in 2026: pricing tiers, what members value most, and what drives renewals. Cite sources.", "completed", "pdf", 5),
+    mission("20000000-0000-4000-8000-000000000003", demoUserIds.admin, agentIds.copywriter, "Launch announcement: AI event recaps", "Announce our new AI-powered event recaps. Lead with the benefit (members who missed an event can catch up in minutes), then how it works, then a friendly call to action.", "queued", "google_doc", 0),
+    mission("20000000-0000-4000-8000-000000000004", demoUserIds.admin, agentIds.researcher, "Community moderation best practices", "Summarize current best practices for moderating fast-growing communities, with examples that fit creators and educators.", "failed", "pdf", 1, {
       error: "Google Drive rejected the upload: the shared folder is full (quota exceeded). The text result was kept below.",
-      outputText: "US telehealth rules for physiotherapy — summary draft\n\n1. Medicare telehealth flexibilities for PT were extended through 2026.\n2. Several states now require in-person evaluation before remote follow-ups.\n3. Documentation must record the patient's location for each session.",
+      outputText: "Community moderation best practices: summary draft\n\n1. Publish clear, friendly community guidelines and pin them where new members start.\n2. Recruit volunteer moderators early and give them a private space to coordinate.\n3. Respond to issues quickly and privately first; celebrate positive behavior publicly.",
     }),
-    mission("20000000-0000-4000-8000-000000000005", demoUserIds.priya, agentIds.copy, "Spring campaign landing page", "Landing page for dental clinics: 'Fill every chair this spring'. Hero, three benefits, testimonial slot, CTA to book a demo.", "completed", "google_doc", 3),
-    mission("20000000-0000-4000-8000-000000000006", demoUserIds.priya, agentIds.copy, "Newsletter: October product update", "Monthly newsletter covering the reminders add-on, the new intake templates, and a customer spotlight.", "queued", "google_doc", 0),
-    mission("20000000-0000-4000-8000-000000000007", demoUserIds.priya, agentIds.research, "Dental SaaS pricing benchmarks", "Collect published pricing for 6 dental practice software tools and summarize tiers.", "completed", "google_sheet", 9),
-    mission("20000000-0000-4000-8000-000000000008", demoUserIds.diego, agentIds.proposal, "Proposal for Harbor Chiropractic", "Single-location chiro clinic, owner is tech-savvy, currently on a competitor. Focus on migration support.", "completed", "pdf", 4),
-    mission("20000000-0000-4000-8000-000000000009", demoUserIds.mei, agentIds.finance, "Q3 budget vs. actuals", "Build a budget vs. actuals sheet for Q3 with variance commentary for marketing, sales, and support.", "completed", "google_sheet", 6),
-    mission("20000000-0000-4000-8000-000000000010", demoUserIds.mei, agentIds.finance, "FY27 hiring plan forecast", "Forecast payroll for 6 planned hires across FY27 with benefits loading at 22%.", "queued", "google_sheet", 0),
+    mission("20000000-0000-4000-8000-000000000005", demoUserIds.priya, agentIds.events, "Spring coaching summit invite", "Invitation email for our spring coaching summit: three live sessions, a community Q&A, and small-group networking. Make it feel welcoming and worth the time.", "completed", "google_doc", 3),
+    mission("20000000-0000-4000-8000-000000000006", demoUserIds.priya, agentIds.events, "Monthly AMA run-of-show", "Run-of-show and reminder messages for our monthly ask-me-anything with a guest coach. Include a follow-up post to keep the conversation going.", "queued", "google_doc", 0),
+    mission("20000000-0000-4000-8000-000000000007", demoUserIds.priya, agentIds.researcher, "Event formats that boost participation", "Collect event formats that get members participating (not just watching) and rank them by effort and impact.", "completed", "google_sheet", 9),
+    mission("20000000-0000-4000-8000-000000000008", demoUserIds.diego, agentIds.copywriter, "Partner welcome kit for Creator Collective", "A welcome kit for our new partner Creator Collective: what Orion helps them do, how to launch their community in the first 30 days, and who to contact.", "completed", "pdf", 4),
+    mission("20000000-0000-4000-8000-000000000009", demoUserIds.mei, agentIds.analyst, "Q3 engagement report", "Build a Q3 engagement report: active members, posts, event attendance, and course completions by month, with a short narrative on what's working.", "completed", "google_sheet", 6),
+    mission("20000000-0000-4000-8000-000000000010", demoUserIds.mei, agentIds.analyst, "Member retention forecast", "Forecast member retention for the next two quarters based on current engagement trends, and suggest three ways to boost it.", "queued", "google_sheet", 0),
   ];
 
   const users = [demoUserIds.admin, demoUserIds.priya, demoUserIds.diego, demoUserIds.mei];
   const userAgents: Record<string, string[]> = {
-    [demoUserIds.admin]: [agentIds.proposal, agentIds.research],
-    [demoUserIds.priya]: [agentIds.copy, agentIds.research],
-    [demoUserIds.diego]: [agentIds.proposal],
-    [demoUserIds.mei]: [agentIds.finance],
+    [demoUserIds.admin]: [agentIds.copywriter, agentIds.researcher],
+    [demoUserIds.priya]: [agentIds.events, agentIds.researcher],
+    [demoUserIds.diego]: [agentIds.copywriter],
+    [demoUserIds.mei]: [agentIds.analyst],
   };
   const modelOf = (agentId: string) => agents.find((agent) => agent.id === agentId)!.model;
 
@@ -226,22 +219,23 @@ export function createSeed(now = Date.now()): DemoState {
   }
 
   const driveFiles: DriveFile[] = [
-    { id: "drive-pricing-2026", name: "Northwind pricing tiers 2026", kind: "sheet", modifiedAt: at(10), sizeBytes: 48_000 },
-    { id: "drive-case-lakeside", name: "Case study — Maple Grove Physio", kind: "doc", modifiedAt: at(40), sizeBytes: 120_000 },
-    { id: "drive-case-dental", name: "Case study — Bright Smile Dental", kind: "pdf", modifiedAt: at(55), sizeBytes: 820_000 },
-    { id: "drive-brand-guide", name: "Brand voice guide", kind: "docx", modifiedAt: at(90), sizeBytes: 260_000 },
-    { id: "drive-faq", name: "Support FAQ export", kind: "csv", modifiedAt: at(14), sizeBytes: 64_000 },
-    { id: "drive-competitors", name: "Competitor notes", kind: "txt", modifiedAt: at(7), sizeBytes: 18_000 },
-    { id: "drive-budget-fy26", name: "FY26 budget", kind: "sheet", modifiedAt: at(33), sizeBytes: 95_000 },
-    { id: "drive-onboarding", name: "90-day onboarding plan", kind: "doc", modifiedAt: at(21), sizeBytes: 74_000 },
+    { id: "drive-brand-guidelines", name: "Orion brand guidelines", kind: "doc", modifiedAt: at(10), sizeBytes: 86_000 },
+    { id: "drive-community-playbook", name: "Community playbook 2026", kind: "doc", modifiedAt: at(40), sizeBytes: 140_000 },
+    { id: "drive-case-creator-collective", name: "Case study: Creator Collective", kind: "pdf", modifiedAt: at(55), sizeBytes: 820_000 },
+    { id: "drive-onboarding-emails", name: "Member onboarding email sequence", kind: "docx", modifiedAt: at(21), sizeBytes: 64_000 },
+    { id: "drive-member-faq", name: "Member FAQ export", kind: "csv", modifiedAt: at(14), sizeBytes: 38_000 },
+    { id: "drive-platform-notes", name: "Community platform notes", kind: "txt", modifiedAt: at(7), sizeBytes: 18_000 },
+    { id: "drive-engagement-q3", name: "Member engagement Q3", kind: "sheet", modifiedAt: at(33), sizeBytes: 95_000 },
+    { id: "drive-event-calendar", name: "Live event calendar", kind: "sheet", modifiedAt: at(5), sizeBytes: 42_000 },
   ];
 
   const knowledge: DemoKnowledge[] = [
-    { agentId: agentIds.proposal, fileId: "drive-pricing-2026", attachedAt: at(12) },
-    { agentId: agentIds.proposal, fileId: "drive-case-lakeside", attachedAt: at(12) },
-    { agentId: agentIds.proposal, fileId: "drive-onboarding", attachedAt: at(9) },
-    { agentId: agentIds.copy, fileId: "drive-brand-guide", attachedAt: at(3) },
-    { agentId: agentIds.finance, fileId: "drive-budget-fy26", attachedAt: at(8) },
+    { agentId: agentIds.copywriter, fileId: "drive-brand-guidelines", attachedAt: at(12) },
+    { agentId: agentIds.copywriter, fileId: "drive-onboarding-emails", attachedAt: at(12) },
+    { agentId: agentIds.researcher, fileId: "drive-platform-notes", attachedAt: at(9) },
+    { agentId: agentIds.events, fileId: "drive-event-calendar", attachedAt: at(3) },
+    { agentId: agentIds.events, fileId: "drive-brand-guidelines", attachedAt: at(3) },
+    { agentId: agentIds.analyst, fileId: "drive-engagement-q3", attachedAt: at(8) },
   ];
 
   return {
@@ -251,7 +245,7 @@ export function createSeed(now = Date.now()): DemoState {
     assignments,
     missions,
     usage,
-    drive: { status: "connected", accountEmail: "workspace@northwind.demo", connectedAt: at(35) },
+    drive: { status: "connected", accountEmail: "workspace@orion.demo", connectedAt: at(35) },
     driveFiles,
     knowledge,
   };

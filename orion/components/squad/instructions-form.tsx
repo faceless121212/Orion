@@ -38,7 +38,7 @@ export function InstructionsForm({
           maxLength={4000}
           name="customInstructions"
           onChange={(event) => setValue(event.target.value)}
-          placeholder="e.g. I work on the EMEA team — use British English and euro pricing."
+          placeholder="e.g. Most of my members are coaches, so use coaching examples."
           value={value}
         />
       </FormField>

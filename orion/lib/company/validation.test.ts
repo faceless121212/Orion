@@ -31,3 +31,11 @@ describe("hasCompanyContext", () => {
     expect(hasCompanyContext({ ...emptyCompanySettings, brandVoice: "Warm" })).toBe(true);
   });
 });
+
+describe("Orion demo company context", () => {
+  it("fits the Company page limits", async () => {
+    const { orionCompanyContext } = await import("@/lib/demo/orion-context");
+
+    expect(companySettingsSchema.safeParse(orionCompanyContext).success).toBe(true);
+  });
+});
