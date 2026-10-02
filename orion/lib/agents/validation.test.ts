@@ -68,3 +68,13 @@ describe("assignment and instructions", () => {
     ).toBe(false);
   });
 });
+
+describe("seeded demo agents", () => {
+  it("pass the same validation as the agent editor", async () => {
+    const { createSeed } = await import("@/lib/demo/seed");
+
+    for (const agent of createSeed(0).agents) {
+      expect(agentSchema.safeParse(agent).success, agent.name).toBe(true);
+    }
+  });
+});
