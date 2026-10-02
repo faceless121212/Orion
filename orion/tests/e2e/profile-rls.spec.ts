@@ -46,13 +46,15 @@ test("a regular user cannot promote their own profile", async () => {
   expect(signInError).toBeNull();
   expect(authData.user).not.toBeNull();
 
-  const { data: updatedProfiles } = await supabase
+  const { data: updatedProfiles, error: updateError } = await supabase
     .from("profiles")
     .update({ role: "admin" })
     .eq("id", authData.user!.id)
     .select("id,role");
 
-  expect(updatedProfiles).toEqual([]);
+  // Before the workspace-data migration RLS filtered the update to zero rows;
+  // after it, the missing column grant rejects it outright. Either blocks it.
+  expect(updateError?.code === "42501" || (updatedProfiles ?? []).length === 0).toBe(true);
 
   const { data: profile, error } = await supabase
     .from("profiles")

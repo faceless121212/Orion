@@ -68,11 +68,13 @@ export const demoRepository: Repository = {
     return ok();
   },
 
-  async updateAvatar(id, avatarUrl) {
+  async updateAvatar(id, avatar) {
     const profile = demoState().profiles.find((candidate) => candidate.id === id);
     if (!profile) return fail("not_found");
 
-    profile.avatarUrl = avatarUrl;
+    profile.avatarUrl = avatar
+      ? `data:${avatar.contentType};base64,${Buffer.from(avatar.bytes).toString("base64")}`
+      : null;
     return ok();
   },
 

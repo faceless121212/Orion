@@ -27,13 +27,16 @@ Demo mode only activates when `ORION_DEMO=1` **and** the server is not a product
 
    - `supabase/migrations/20260814000100_create_profiles.sql`
    - `supabase/migrations/20260929000100_admin_configuration.sql`
+   - `supabase/migrations/20260929000200_workspace_data.sql` (missions, usage, integrations, knowledge, profile fields, and the `avatars` storage bucket)
    - `supabase/promote-first-user.sql` after replacing its example email
 
 4. Set `REGISTRATION_ALLOWED_EMAILS` to the comma-separated email addresses that may register. Registration fails closed when this value is missing.
 
-5. Optional: set `ANTHROPIC_API_KEY` to enable "Generate with AI" in the agent editor. Everything else works without it; the button explains what is missing.
+5. Optional: set `SUPABASE_SERVICE_ROLE_KEY` (server only) so Orion can record usage events, which users cannot write themselves. Without it everything works but prompt-generation usage is not recorded.
 
-6. Start Orion and keep this terminal running:
+6. Optional: set `ANTHROPIC_API_KEY` to enable "Generate with AI" in the agent editor. Everything else works without it; the button explains what is missing.
+
+7. Start Orion and keep this terminal running:
 
    ```bash
    npm run dev

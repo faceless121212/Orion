@@ -44,9 +44,11 @@ export async function uploadAvatarAction(_state: FormState, formData: FormData):
     return { status: "error", message: problem };
   }
 
-  // The data URL is built from the validated MIME type, never from the file name.
-  const dataUrl = `data:${file.type};base64,${Buffer.from(await file.arrayBuffer()).toString("base64")}`;
-  const result = await getRepository().updateAvatar(profile.id, dataUrl);
+  // The stored content type is the validated MIME type, never the file name.
+  const result = await getRepository().updateAvatar(profile.id, {
+    bytes: new Uint8Array(await file.arrayBuffer()),
+    contentType: file.type,
+  });
 
   if (!result.ok) {
     return { status: "error", message: failureMessage(result, "Unable to upload this image.") };

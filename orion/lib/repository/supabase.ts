@@ -1,10 +1,23 @@
 import "server-only";
 
-import type { AgentIcon, AgentStatus } from "@/lib/agents/catalog";
+import { estimateCostUsd, type AgentIcon, type AgentStatus } from "@/lib/agents/catalog";
 import type { AppRole } from "@/lib/auth/access";
 import { emptyCompanySettings } from "@/lib/company/validation";
 import type { AgentRecord, SquadMember } from "@/lib/domain/types";
+import {
+  avatarObjectPath,
+  missionColumns,
+  toDriveConnection,
+  toKnowledgeFile,
+  toMission,
+  toUsageEvent,
+  type KnowledgeRow,
+  type MissionRow,
+  type UsageRow,
+  usageColumns,
+} from "@/lib/repository/supabase-mappers";
 import { fail, ok, type Repository } from "@/lib/repository/types";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const UNIQUE_VIOLATION = "23505";
@@ -47,7 +60,16 @@ function toAgentRow(values: Omit<AgentRecord, "id" | "updatedAt">) {
 
 const firstCount = (value: unknown) => (value as Array<{ count: number }>)[0]?.count ?? 0;
 
-const phase3 = (feature: string) => fail("unavailable", `${feature} arrives with the Phase 3 backend. Run Orion with ORION_DEMO=1 to preview it.`);
+const phase3 = (feature: string) =>
+  fail("unavailable", `${feature} arrives with the Phase 3 runtime. Run Orion with ORION_DEMO=1 to preview it.`);
+
+const missionFields = (values: { agentId: string; title: string; brief: string; webSearch: boolean; outputFormat: string }) => ({
+  agent_id: values.agentId,
+  title: values.title,
+  brief: values.brief,
+  web_search: values.webSearch,
+  output_format: values.outputFormat,
+});
 
 /** Supabase-backed data access; row-level security is the second authorization layer. */
 export const supabaseRepository: Repository = {
@@ -55,7 +77,7 @@ export const supabaseRepository: Repository = {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("profiles")
-      .select("id,email,full_name,role")
+      .select("id,email,full_name,role,job_title,avatar_url")
       .eq("id", id)
       .maybeSingle();
 
@@ -67,25 +89,66 @@ export const supabaseRepository: Repository = {
           email: data.email,
           fullName: data.full_name,
           role: data.role as AppRole,
-          jobTitle: "",
-          avatarUrl: null,
+          jobTitle: data.job_title ?? "",
+          avatarUrl: data.avatar_url ?? null,
         }
       : null;
   },
 
-  async updateProfile() {
-    return phase3("Profile editing");
+  async updateProfile(id, values) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ full_name: values.fullName, job_title: values.jobTitle })
+      .eq("id", id)
+      .select("id");
+
+    if (error) return fail("error");
+    return data.length ? ok() : fail("not_found");
   },
 
-  async updateAvatar() {
-    return phase3("Avatar upload");
+  async updateAvatar(id, avatar) {
+    const supabase = await createClient();
+    let avatarUrl: string | null = null;
+
+    if (avatar) {
+      const path = avatarObjectPath(id, avatar.contentType);
+      if (!path) return fail("invalid", "Use a PNG, JPEG, WebP, or GIF image.");
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, avatar.bytes, { contentType: avatar.contentType, upsert: false });
+
+      if (uploadError) return fail("error", "Unable to upload this image.");
+      avatarUrl = supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+    }
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ avatar_url: avatarUrl })
+      .eq("id", id)
+      .select("id");
+    const keep = avatarUrl ? avatarUrl.split("/").pop() : undefined;
+
+    if (error || !data.length) {
+      // Don't leave an orphaned, publicly readable upload behind.
+      if (keep) await supabase.storage.from("avatars").remove([`${id}/${keep}`]);
+      return error ? fail("error") : fail("not_found");
+    }
+
+    // Remove earlier photos so replaced or removed avatars stop being public.
+    const { data: files } = await supabase.storage.from("avatars").list(id);
+    const stale = (files ?? []).filter((file) => file.name !== keep).map((file) => `${id}/${file.name}`);
+    if (stale.length) await supabase.storage.from("avatars").remove(stale);
+
+    return ok();
   },
 
   async listUsers() {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("profiles")
-      .select("id,email,full_name,role,user_agents!user_agents_user_id_fkey(count)")
+      .select("id,email,full_name,role,job_title,avatar_url,user_agents!user_agents_user_id_fkey(count)")
       .order("full_name");
 
     if (error) throw new Error("Unable to load users.");
@@ -95,8 +158,8 @@ export const supabaseRepository: Repository = {
       email: row.email,
       fullName: row.full_name,
       role: row.role as AppRole,
-      jobTitle: "",
-      avatarUrl: null,
+      jobTitle: row.job_title ?? "",
+      avatarUrl: row.avatar_url ?? null,
       squadSize: firstCount(row.user_agents),
     }));
   },
@@ -270,63 +333,161 @@ export const supabaseRepository: Repository = {
     return data.length ? ok() : fail("not_found");
   },
 
-  async listMissions() {
-    return [];
+  async listMissions(userId) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("missions")
+      .select(missionColumns)
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false });
+
+    if (error) throw new Error("Unable to load missions.");
+    return (data as unknown as MissionRow[]).map(toMission);
   },
 
-  async getMission() {
-    return null;
+  async getMission(userId, id) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("missions")
+      .select(missionColumns)
+      .eq("id", id)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (error) throw new Error("Unable to load this mission.");
+    return data ? toMission(data as unknown as MissionRow) : null;
   },
 
-  async createMission() {
-    return phase3("Missions");
+  async createMission(userId, values) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("missions")
+      .insert({ user_id: userId, ...missionFields(values) })
+      .select("id")
+      .single();
+
+    // An RLS rejection means the agent is not an active member of the user's squad.
+    if (error?.code === "42501") return fail("invalid", "Choose an agent from your squad.");
+    if (error || !data) return fail("error");
+    return ok({ id: data.id as string });
   },
 
-  async updateMission() {
-    return phase3("Missions");
+  async updateMission(userId, id, values) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("missions")
+      .update(missionFields(values))
+      .eq("id", id)
+      .eq("user_id", userId)
+      .select("id");
+
+    if (error?.code === "42501") return fail("invalid", "Choose an agent from your squad.");
+    if (error) return fail("error");
+    return data.length ? ok() : fail("invalid", "Only queued or failed missions can be edited.");
   },
 
-  async deleteMission() {
-    return phase3("Missions");
+  async deleteMission(userId, id) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("missions")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId)
+      .select("id");
+
+    if (error) return fail("error");
+    return data.length ? ok() : fail("invalid", "A running mission cannot be deleted.");
   },
 
   async runMission() {
     return phase3("Mission runs");
   },
 
-  async listUsage() {
-    return [];
+  async listUsage({ userId, since }) {
+    const supabase = await createClient();
+    let query = supabase.from("usage_events").select(usageColumns).order("created_at", { ascending: false }).limit(2000);
+
+    if (userId) query = query.eq("user_id", userId);
+    if (since) query = query.gte("created_at", since);
+
+    const { data, error } = await query;
+
+    if (error) throw new Error("Unable to load usage.");
+    return (data as unknown as UsageRow[]).map(toUsageEvent);
   },
 
-  async recordPromptGeneration() {
-    // usage_events arrives in Phase 4.
+  async recordPromptGeneration(userId, usage) {
+    // Usage rows are server-written only (no RLS insert policy for users).
+    const admin = createAdminClient();
+    if (!admin) return;
+
+    const { error } = await admin.from("usage_events").insert({
+      user_id: userId,
+      event_type: "prompt_generation",
+      model: usage.model,
+      input_tokens: usage.inputTokens,
+      output_tokens: usage.outputTokens,
+      cost_usd: estimateCostUsd(usage.model, usage.inputTokens, usage.outputTokens),
+    });
+
+    if (error) console.error("Unable to record prompt-generation usage:", error.code);
   },
 
   async getDriveConnection() {
-    return { status: "disconnected" };
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("integrations")
+      .select("status,account_email,connected_at")
+      .eq("provider", "google_drive")
+      .maybeSingle();
+
+    if (error) throw new Error("Unable to load integrations.");
+    return toDriveConnection(data);
   },
 
   async connectDrive() {
-    return phase3("Google Drive");
+    return phase3("Connecting Google Drive through Pipedream");
   },
 
   async disconnectDrive() {
-    return phase3("Google Drive");
+    const supabase = await createClient();
+    const { error } = await supabase.from("integrations").upsert({
+      provider: "google_drive",
+      status: "disconnected",
+      account_email: null,
+      external_account_id: null,
+      connected_at: null,
+      connected_by: null,
+    });
+
+    return error ? fail("error") : ok();
   },
 
   async listDriveFiles() {
+    // Listing Drive files needs the Pipedream connection (Phase 3).
     return [];
   },
 
-  async listKnowledge() {
-    return [];
+  async listKnowledge(agentId) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("agent_knowledge")
+      .select("file_id,name,kind,modified_at,size_bytes,attached_at")
+      .eq("agent_id", agentId)
+      .order("name");
+
+    if (error) throw new Error("Unable to load knowledge files.");
+    return (data as KnowledgeRow[]).map(toKnowledgeFile);
   },
 
   async attachKnowledge() {
-    return phase3("Agent knowledge");
+    return phase3("Attaching Drive files");
   },
 
-  async detachKnowledge() {
-    return phase3("Agent knowledge");
+  async detachKnowledge(agentId, fileId) {
+    const supabase = await createClient();
+    const { error } = await supabase.from("agent_knowledge").delete().eq("agent_id", agentId).eq("file_id", fileId);
+
+    return error ? fail("error") : ok();
   },
 };

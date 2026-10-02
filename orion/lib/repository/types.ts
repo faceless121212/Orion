@@ -14,6 +14,8 @@ import type {
   WorkspaceUser,
 } from "@/lib/domain/types";
 
+export type AvatarUpload = { bytes: Uint8Array; contentType: string };
+
 export type WriteFailure = {
   ok: false;
   reason: "conflict" | "not_found" | "invalid" | "unavailable" | "error";
@@ -39,7 +41,7 @@ export type Repository = {
   // Profiles
   getProfile(id: string): Promise<Profile | null>;
   updateProfile(id: string, values: { fullName: string; jobTitle: string }): Promise<WriteResult>;
-  updateAvatar(id: string, avatarUrl: string | null): Promise<WriteResult>;
+  updateAvatar(id: string, avatar: AvatarUpload | null): Promise<WriteResult>;
   listUsers(): Promise<WorkspaceUser[]>;
 
   // Company
