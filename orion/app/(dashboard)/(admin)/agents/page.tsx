@@ -9,10 +9,10 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { modelLabel } from "@/lib/agents/catalog";
-import { listAgents } from "@/lib/data/agents";
+import { getRepository } from "@/lib/repository";
 
 export default async function AgentsPage() {
-  const agents = await listAgents();
+  const agents = await getRepository().listAgents();
   const newAgent = (
     <Link className={buttonVariants()} href="/agents/new">
       <Plus />
@@ -59,7 +59,7 @@ export default async function AgentsPage() {
           </Table>
         </Card>
       ) : (
-        <EmptyState action={newAgent} description="Configure names, models, system prompts, icons, and availability from this workspace." icon={Bot} title="Build your first agent" />
+        <EmptyState action={newAgent} description="Configure names, models, system prompts, icons, and availability from this workspace." icon={Bot} image="/brand/empty/agents.webp" title="Build your first agent" />
       )}
     </>
   );

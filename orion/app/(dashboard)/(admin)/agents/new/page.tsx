@@ -2,10 +2,10 @@ import { AgentForm } from "@/components/agents/agent-form";
 import { BackLink } from "@/components/shell/back-link";
 import { PageHeader } from "@/components/shell/page-header";
 import { hasCompanyContext } from "@/lib/company/validation";
-import { getCompanySettings } from "@/lib/data/company";
+import { getRepository } from "@/lib/repository";
 
 export default async function NewAgentPage() {
-  const company = await getCompanySettings();
+  const company = await getRepository().getCompanySettings();
 
   return (
     <>

@@ -11,9 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { modelLabel } from "@/lib/agents/catalog";
 import { uuidSchema } from "@/lib/agents/validation";
-import { listAgents } from "@/lib/data/agents";
-import { listSquad } from "@/lib/data/squad";
-import { getUser } from "@/lib/data/users";
+import { getRepository } from "@/lib/repository";
 
 export default async function UserSquadPage({ params }: { params: Promise<{ userId: string }> }) {
   const { userId } = await params;
@@ -22,7 +20,12 @@ export default async function UserSquadPage({ params }: { params: Promise<{ user
     notFound();
   }
 
-  const [user, squad, agents] = await Promise.all([getUser(userId), listSquad(userId), listAgents()]);
+  const repository = getRepository();
+  const [user, squad, agents] = await Promise.all([
+    repository.getProfile(userId),
+    repository.listSquad(userId),
+    repository.listAgents(),
+  ]);
 
   if (!user) {
     notFound();

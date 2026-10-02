@@ -48,3 +48,11 @@ export const instructionsSchema = z.object({
     .trim()
     .max(4000, "Personal instructions must be 4,000 characters or fewer."),
 });
+
+export const knowledgeSchema = z.object({
+  agentId: uuidSchema,
+  fileIds: z
+    .array(z.string().regex(/^[\w-]{1,120}$/, "Invalid file."))
+    .min(1, "Choose at least one file.")
+    .max(20, "Attach at most 20 files at a time."),
+});

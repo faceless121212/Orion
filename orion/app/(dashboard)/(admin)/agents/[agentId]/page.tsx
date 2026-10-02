@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 
 import { AgentForm } from "@/components/agents/agent-form";
+import { KnowledgeCard } from "@/components/agents/knowledge-card";
 import { BackLink } from "@/components/shell/back-link";
 import { PageHeader } from "@/components/shell/page-header";
 import { uuidSchema } from "@/lib/agents/validation";
 import { hasCompanyContext } from "@/lib/company/validation";
-import { getAgent } from "@/lib/data/agents";
-import { getCompanySettings } from "@/lib/data/company";
+import { getRepository } from "@/lib/repository";
 
 export default async function EditAgentPage({
   params,
@@ -21,7 +21,14 @@ export default async function EditAgentPage({
     notFound();
   }
 
-  const [agent, company] = await Promise.all([getAgent(agentId), getCompanySettings()]);
+  const repository = getRepository();
+  const [agent, company, connection, knowledge, driveFiles] = await Promise.all([
+    repository.getAgent(agentId),
+    repository.getCompanySettings(),
+    repository.getDriveConnection(),
+    repository.listKnowledge(agentId),
+    repository.listDriveFiles(),
+  ]);
 
   if (!agent) {
     notFound();
@@ -36,6 +43,7 @@ export default async function EditAgentPage({
         created={created === "1"}
         hasCompanyContext={hasCompanyContext(company)}
       />
+      <KnowledgeCard agentId={agent.id} connection={connection} driveFiles={driveFiles} knowledge={knowledge} />
     </>
   );
 }

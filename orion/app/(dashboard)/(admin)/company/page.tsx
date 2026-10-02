@@ -1,9 +1,9 @@
 import { CompanyForm } from "@/components/company/company-form";
 import { PageHeader } from "@/components/shell/page-header";
-import { getCompanySettings } from "@/lib/data/company";
+import { getRepository } from "@/lib/repository";
 
 export default async function CompanyPage() {
-  const settings = await getCompanySettings();
+  const settings = await getRepository().getCompanySettings();
 
   return (
     <>

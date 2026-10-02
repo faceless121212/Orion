@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 import { RegisterForm } from "@/components/auth/register-form";
+import { isDemoMode } from "@/lib/demo/mode";
 
 export const metadata: Metadata = { title: "Create account · Orion" };
 
 export default function RegisterPage() {
+  if (isDemoMode()) {
+    redirect("/login");
+  }
+
   return (
     <>
       <div className="mb-8">

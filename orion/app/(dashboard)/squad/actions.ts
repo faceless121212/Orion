@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { instructionsSchema } from "@/lib/agents/validation";
 import { requireUser } from "@/lib/auth/session";
 import { fieldsFrom, type FormState } from "@/lib/form-state";
-import { createClient } from "@/lib/supabase/server";
+import { getRepository } from "@/lib/repository";
 
 export async function saveInstructionsAction(
   _state: FormState,
@@ -23,20 +23,17 @@ export async function saveInstructionsAction(
   }
 
   // Ownership comes from the session, never from the form.
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("user_agents")
-    .update({ custom_instructions: parsed.data.customInstructions })
-    .eq("user_id", profile.id)
-    .eq("agent_id", parsed.data.agentId)
-    .select("agent_id");
+  const result = await getRepository().updateInstructions(
+    profile.id,
+    parsed.data.agentId,
+    parsed.data.customInstructions,
+  );
 
-  if (error) {
-    return { status: "error", message: "Unable to save your instructions. Try again." };
-  }
-
-  if (!data.length) {
-    return { status: "error", message: "This agent is no longer in your squad." };
+  if (!result.ok) {
+    return {
+      status: "error",
+      message: result.reason === "not_found" ? "This agent is no longer in your squad." : "Unable to save your instructions. Try again.",
+    };
   }
 
   revalidatePath("/squad");

@@ -8,11 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { modelLabel } from "@/lib/agents/catalog";
 import { requireUser } from "@/lib/auth/session";
-import { listSquad } from "@/lib/data/squad";
+import { getRepository } from "@/lib/repository";
 
 export default async function SquadPage() {
   const profile = await requireUser();
-  const squad = (await listSquad(profile.id)).filter((member) => member.status === "active");
+  const squad = (await getRepository().listSquad(profile.id)).filter((member) => member.status === "active");
 
   return (
     <>
@@ -36,7 +36,7 @@ export default async function SquadPage() {
           ))}
         </div>
       ) : (
-        <EmptyState description="Your squad is empty. An administrator assigns agents to you from the Users page." icon={Users} title="No agents assigned yet" />
+        <EmptyState description="Your squad is empty. An administrator assigns agents to you from the Users page." icon={Users} image="/brand/empty/squad.webp" title="No agents assigned yet" />
       )}
     </>
   );

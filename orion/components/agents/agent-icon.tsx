@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
   BarChart3,
   Bot,
@@ -14,9 +15,10 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import type { AgentIcon as AgentIconName } from "@/lib/agents/catalog";
+import { agentIcons, type AgentIcon as AgentIconName } from "@/lib/agents/catalog";
 import { cn } from "@/lib/utils";
 
+/** Line icons, kept for compact contexts and as a fallback. */
 export const agentIconComponents: Record<AgentIconName, LucideIcon> = {
   bot: Bot,
   briefcase: Briefcase,
@@ -32,17 +34,18 @@ export const agentIconComponents: Record<AgentIconName, LucideIcon> = {
   users: Users,
 };
 
-export function AgentIcon({ icon, className }: { icon: string; className?: string }) {
-  const Icon = agentIconComponents[icon as AgentIconName] ?? Bot;
+export const agentIconSrc = (icon: string) =>
+  (agentIcons as readonly string[]).includes(icon) ? `/brand/agents/${icon}.webp` : "/brand/agents/bot.webp";
 
+/** Illustrated agent tile generated for Orion (see public/brand/agents). */
+export function AgentIcon({ icon, className }: { icon: string; className?: string }) {
   return (
-    <span
-      className={cn(
-        "grid size-9 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-600 ring-1 ring-blue-100",
-        className,
-      )}
-    >
-      <Icon aria-hidden="true" className="size-4" />
-    </span>
+    <Image
+      alt=""
+      className={cn("size-9 shrink-0 rounded-xl object-cover ring-1 ring-black/5", className)}
+      height={128}
+      src={agentIconSrc(icon)}
+      width={128}
+    />
   );
 }

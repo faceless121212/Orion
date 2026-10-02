@@ -15,3 +15,18 @@ export function fieldsFrom(formData: FormData): Record<string, string> {
     ),
   );
 }
+
+export function failureMessage(
+  failure: { reason: string; message?: string },
+  fallback = "Looks like something went wrong. Try again, and if it keeps happening, we're here to help.",
+) {
+  return failure.message ?? fallback;
+}
+
+/**
+ * Remount key for forms whose default values change (echoed values after an
+ * error, or fresh server data after a save); Base UI inputs warn otherwise.
+ */
+export function formKey(state: FormState) {
+  return state.values ? JSON.stringify(state.values) : "initial";
+}

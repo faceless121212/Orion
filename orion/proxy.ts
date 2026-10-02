@@ -1,8 +1,13 @@
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
+import { isDemoMode } from "@/lib/demo/mode";
 import { updateSession } from "@/lib/supabase/proxy";
 
 export async function proxy(request: NextRequest) {
+  if (isDemoMode()) {
+    return NextResponse.next({ request });
+  }
+
   return updateSession(request);
 }
 

@@ -2,6 +2,17 @@
 
 Orion is a secure, single-company dashboard for assigning AI agents to employees and running document-producing missions.
 
+## Try it without Supabase (demo mode)
+
+```bash
+npm install
+npm run dev:demo
+```
+
+Open [http://localhost:3000](http://localhost:3000) and pick a persona: Alex (admin) or one of three employees. Demo mode swaps Supabase for an in-memory workspace seeded with a company, agents, squads, missions, usage, and Google Drive files. Every screen and form works, including running missions: a run finishes after about 8 seconds, and a brief containing `#fail` fails so you can try retry. Data resets when the server restarts. Switch personas from the header.
+
+Demo mode only activates when `ORION_DEMO=1` **and** the server is not a production build, so it can never bypass real sign-in in a deployment.
+
 ## Local setup
 
 1. Install dependencies:

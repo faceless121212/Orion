@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "orion-demo",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "cd orion && ORION_DEMO=1 npx next dev -p 3217"],
+      "port": 3217
+    }
+  ]
+}
