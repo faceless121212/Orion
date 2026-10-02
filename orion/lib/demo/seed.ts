@@ -1,4 +1,5 @@
 import { estimateCostUsd } from "@/lib/agents/catalog";
+import { marketingManagerPrompt } from "@/lib/demo/agent-prompts";
 import { orionCompanyContext } from "@/lib/demo/orion-context";
 import type {
   AgentRecord,
@@ -48,6 +49,7 @@ const agentIds = {
   analyst: "10000000-0000-4000-8000-000000000003",
   events: "10000000-0000-4000-8000-000000000004",
   legacy: "10000000-0000-4000-8000-000000000005",
+  marketing: "10000000-0000-4000-8000-000000000006",
 } as const;
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -120,6 +122,16 @@ export function createSeed(now = Date.now()): DemoState {
       updatedAt: at(3),
     },
     {
+      id: agentIds.marketing,
+      name: "Marketing Manager",
+      description: "Researches blog ideas and writes publish-ready, SEO-friendly blog posts.",
+      model: "claude-opus-5",
+      icon: "lightbulb",
+      status: "active",
+      systemPrompt: marketingManagerPrompt,
+      updatedAt: at(1),
+    },
+    {
       id: agentIds.legacy,
       name: "Legacy Help Bot",
       description: "Answered member support questions before the help center launched.",
@@ -134,6 +146,8 @@ export function createSeed(now = Date.now()): DemoState {
   const assignments: DemoAssignment[] = [
     { userId: demoUserIds.admin, agentId: agentIds.copywriter, customInstructions: "", createdAt: at(30) },
     { userId: demoUserIds.admin, agentId: agentIds.researcher, customInstructions: "Focus on creator and education communities first.", createdAt: at(30) },
+    { userId: demoUserIds.priya, agentId: agentIds.marketing, customInstructions: "Our blog readers are community builders just getting started, so keep examples practical.", createdAt: at(1) },
+    { userId: demoUserIds.admin, agentId: agentIds.marketing, customInstructions: "", createdAt: at(1) },
     { userId: demoUserIds.priya, agentId: agentIds.events, customInstructions: "Most of my events are for coaching communities, so use coaching examples.", createdAt: at(25) },
     { userId: demoUserIds.priya, agentId: agentIds.researcher, customInstructions: "", createdAt: at(25) },
     { userId: demoUserIds.priya, agentId: agentIds.legacy, customInstructions: "", createdAt: at(60) },
@@ -157,7 +171,7 @@ export function createSeed(now = Date.now()): DemoState {
     agentId,
     title,
     brief,
-    webSearch: agentId === agentIds.researcher,
+    webSearch: agentId === agentIds.researcher || agentId === agentIds.marketing,
     outputFormat,
     status,
     outputUrl: status === "completed" ? `/missions/${id}/output` : null,
@@ -171,6 +185,8 @@ export function createSeed(now = Date.now()): DemoState {
   });
 
   const missions: DemoMission[] = [
+    mission("20000000-0000-4000-8000-000000000011", demoUserIds.priya, agentIds.marketing, "Q4 blog idea shortlist", "Research and shortlist 6 blog ideas for Q4 that help community builders boost engagement. Use the shortlist format with angle, audience, why it matters, and word count.", "queued", "google_doc", 0),
+    mission("20000000-0000-4000-8000-000000000012", demoUserIds.priya, agentIds.marketing, "Blog: 7 ways to turn lurkers into contributors", "Write a 1,200-word blog post for community builders on turning passive members into active contributors. Ground it in research and cite sources.", "completed", "google_doc", 1),
     mission("20000000-0000-4000-8000-000000000001", demoUserIds.admin, agentIds.copywriter, "Welcome post for new members", "A warm welcome post for our community space: say hi, explain where to start, and invite people to introduce themselves. Keep it short and encouraging.", "completed", "google_doc", 2),
     mission("20000000-0000-4000-8000-000000000002", demoUserIds.admin, agentIds.researcher, "How creators run paid communities", "Research how creators structure paid memberships in 2026: pricing tiers, what members value most, and what drives renewals. Cite sources.", "completed", "pdf", 5),
     mission("20000000-0000-4000-8000-000000000003", demoUserIds.admin, agentIds.copywriter, "Launch announcement: AI event recaps", "Announce our new AI-powered event recaps. Lead with the benefit (members who missed an event can catch up in minutes), then how it works, then a friendly call to action.", "queued", "google_doc", 0),
@@ -189,7 +205,7 @@ export function createSeed(now = Date.now()): DemoState {
   const users = [demoUserIds.admin, demoUserIds.priya, demoUserIds.diego, demoUserIds.mei];
   const userAgents: Record<string, string[]> = {
     [demoUserIds.admin]: [agentIds.copywriter, agentIds.researcher],
-    [demoUserIds.priya]: [agentIds.events, agentIds.researcher],
+    [demoUserIds.priya]: [agentIds.events, agentIds.researcher, agentIds.marketing],
     [demoUserIds.diego]: [agentIds.copywriter],
     [demoUserIds.mei]: [agentIds.analyst],
   };
